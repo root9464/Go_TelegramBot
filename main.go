@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"os"
+	"root/database"
+	"root/database/models"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
@@ -23,20 +25,52 @@ func main() {
 
 	updates := bot.GetUpdatesChan(u)
 
+	method := database.MethodDB()
+	db, err := method.Connect()
+	if err != nil {
+		log.Fatal("Ошибка подключения к базе данных. \n", err)
+	}
+
+	var subjectName, task string
+	var step int
+
 	for update := range updates {
-		if update.Message == nil {
+		if update.Message == nil || update.Message.From.ID == bot.Self.ID {
 			continue
 		}
 
-		if update.Message.From.ID == bot.Self.ID {
-			continue
+		if update.Message.Text == "/task" {
+			// Reset variables for the new homework entry
+			subjectName = ""
+			task = ""
+			step = 0
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Please enter the subject name:")
+			_, err := bot.Send(msg)
+			if err == nil {
+				step = 1
+			}
+		} else if step == 1 {
+			subjectName = update.Message.Text
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Please enter the task:")
+			_, err := bot.Send(msg)
+			if err == nil {
+				step = 2
+			}
+		} else if step == 2 {
+			task = update.Message.Text
+			homework := models.Homework{
+				SubjectName: subjectName,
+				Task:        task,
+			}
+			err := db.Create(&homework).Error
+			if err == nil {
+				confirmMsg := tgbotapi.NewMessage(update.Message.Chat.ID, "Homework saved successfully!")
+				bot.Send(confirmMsg)
+			}
+			// Reset variables for the next homework entry
+			subjectName = ""
+			task = ""
+			step = 0
 		}
-
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-		_, err := bot.Send(msg)
-		if err != nil {
-			log.Println("ошибка отправки сообщения: ", err)
-		}
-
 	}
 }
