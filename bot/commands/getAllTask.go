@@ -8,7 +8,7 @@ import (
 )
 
 func (hb *HomeworkBot) getAllTask(update tgbotapi.Update) {
-	if update.Message.Text == "/getTask" || update.Message.Text == "Получить все ДЗ" {
+	if update.Message.Text == "/getAllTask" || update.Message.Text == "Получить все ДЗ" {
 		var tasks []models.Homework
 		err := hb.db.Find(&tasks).Error
 		if err != nil {
