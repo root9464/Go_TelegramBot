@@ -8,23 +8,21 @@ import (
 )
 
 func (hb *HomeworkBot) addTask(update tgbotapi.Update) {
-	if update.Message.Text == "/task" {
+	if update.Message.Text == "/addTask" {
 		subjectName, task = "", ""
 		isSubjectInput = true
 		isTaskInput = false
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, введите предмет:")
-		_, err := hb.bot.Send(msg)
-		if err == nil {
-			log.Fatal("ошибка: не удалось отправить сообщение. \n", err)
+		if _, err := hb.bot.Send(msg); err != nil {
+			log.Println("ошибка: не удалось отправить сообщение1. \n", err)
 		}
 	} else if isSubjectInput {
 		subjectName = update.Message.Text
 		isSubjectInput = false
 		isTaskInput = true
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, введите задание:")
-		_, err := hb.bot.Send(msg)
-		if err == nil {
-			log.Fatal("ошибка: не удалось отправить сообщение. \n", err)
+		if _, err := hb.bot.Send(msg); err != nil {
+			log.Println("ошибка: не удалось отправить сообщение2. \n", err)
 		}
 	} else if isTaskInput {
 		task = update.Message.Text
@@ -32,13 +30,12 @@ func (hb *HomeworkBot) addTask(update tgbotapi.Update) {
 			SubjectName: subjectName,
 			Task:        task,
 		}
-		err := hb.db.Create(&homework).Error
-		if err != nil {
-			log.Fatal("ошибка: не удалось создать задание. \n", err)
+		if err := hb.db.Create(&homework).Error; err != nil {
+			log.Println("ошибка: не удалось создать задание. \n", err)
 		}
 		confirmMsg := tgbotapi.NewMessage(update.Message.Chat.ID, "Задание добавлено!")
 		if _, err := hb.bot.Send(confirmMsg); err != nil {
-			log.Fatal("ошибка: не удалось отправить сообщение. \n", err)
+			log.Println("ошибка: не удалось отправить сообщение3. \n", err)
 		}
 
 		// Сброс значений

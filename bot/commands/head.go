@@ -37,6 +37,7 @@ func NewHomeworkBot(token string) (*HomeworkBot, error) {
 }
 
 func (hb *HomeworkBot) Start() {
+
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
