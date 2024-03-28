@@ -8,7 +8,7 @@ import (
 )
 
 func (hb *HomeworkBot) addTask(update tgbotapi.Update) {
-	if update.Message.Text == "/addTask" {
+	if update.Message.Text == "/addTask" || update.Message.Text == "Добавить ДЗ" {
 		subjectName, task = "", ""
 		isSubjectInput = true
 		isTaskInput = false
@@ -43,5 +43,9 @@ func (hb *HomeworkBot) addTask(update tgbotapi.Update) {
 		task = ""
 		isSubjectInput = false
 		isTaskInput = false
+		// msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите команду2:")
+		// if _, err := hb.bot.Send(msg); err != nil {
+		// 	log.Println("ошибка: не удалось отправить сообщение4. \n", err)
+		// }
 	}
 }

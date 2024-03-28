@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"log"
 	"root/database"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -37,17 +38,37 @@ func NewHomeworkBot(token string) (*HomeworkBot, error) {
 }
 
 func (hb *HomeworkBot) Start() {
-
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
 	updates := hb.bot.GetUpdatesChan(u)
+	commandMessageSent := false
+
 	for update := range updates {
 		if update.Message == nil || update.Message.From.ID == hb.bot.Self.ID {
 			continue
 		}
-		// команды бота как ооп метод чтобы было прощи
+
+		if !commandMessageSent {
+
+			keyboard := tgbotapi.NewReplyKeyboard(
+				tgbotapi.NewKeyboardButtonRow(
+					tgbotapi.NewKeyboardButton("Добавить ДЗ"),
+					tgbotapi.NewKeyboardButton("Получить все ДЗ"),
+				),
+			)
+
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите команду:")
+			msg.ReplyMarkup = keyboard
+
+			if _, err := hb.bot.Send(msg); err != nil {
+				log.Println("Error: failed to send message. \n", err)
+			}
+
+			commandMessageSent = true
+		}
 		hb.processesBotUpdate(update)
+
 	}
 }
 
