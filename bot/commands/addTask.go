@@ -8,44 +8,46 @@ import (
 )
 
 func (hb *HomeworkBot) addTask(update tgbotapi.Update) {
-	if update.Message.Text == "/addTask" || update.Message.Text == "Добавить ДЗ" {
-		subjectName, task = "", ""
-		isSubjectInput = true
-		isTaskInput = false
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, введите предмет:")
-		if _, err := hb.bot.Send(msg); err != nil {
-			log.Println("ошибка: не удалось отправить сообщение1. \n", err)
-		}
-	} else if isSubjectInput {
-		subjectName = update.Message.Text
-		isSubjectInput = false
-		isTaskInput = true
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, введите задание:")
-		if _, err := hb.bot.Send(msg); err != nil {
-			log.Println("ошибка: не удалось отправить сообщение2. \n", err)
-		}
-	} else if isTaskInput {
-		task = update.Message.Text
-		homework := &models.Homework{
-			SubjectName: subjectName,
-			Task:        task,
-		}
-		if err := hb.db.Create(&homework).Error; err != nil {
-			log.Println("ошибка: не удалось создать задание. \n", err)
-		}
-		confirmMsg := tgbotapi.NewMessage(update.Message.Chat.ID, "Задание добавлено!")
-		if _, err := hb.bot.Send(confirmMsg); err != nil {
-			log.Println("ошибка: не удалось отправить сообщение3. \n", err)
-		}
+	state := &hb.state
 
-		// Сброс значений
-		subjectName = ""
-		task = ""
-		isSubjectInput = false
-		isTaskInput = false
-		// msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите команду2:")
-		// if _, err := hb.bot.Send(msg); err != nil {
-		// 	log.Println("ошибка: не удалось отправить сообщение4. \n", err)
-		// }
+	if update.Message.Text == "/addTask" || update.Message.Text == "Добавить ДЗ" {
+		state.IsSubjectInput = true
+		state.IsTaskInput = false
+		state.SubjectName = ""
+		state.Task = ""
+		state.IsAddTask = true
+
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите название предмета:")
+		if _, err := hb.bot.Send(msg); err != nil {
+			log.Println("Ошибка: не удалось отправить сообщение. \n", err)
+		}
+	} else if state.IsSubjectInput && !state.IsTaskInput && state.IsAddTask {
+		state.SubjectName = update.Message.Text
+		state.IsSubjectInput = false
+		state.IsTaskInput = true
+
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите задание:")
+		if _, err := hb.bot.Send(msg); err != nil {
+			log.Println("Ошибка: не удалось отправить сообщение. \n", err)
+		}
+	} else if state.IsTaskInput {
+		state.Task = update.Message.Text
+		state.IsTaskInput = false
+
+		go func() {
+			homework := models.Homework{
+				SubjectName: state.SubjectName,
+				Task:        state.Task,
+			}
+			err := hb.db.Create(&homework).Error
+			if err != nil {
+				log.Println("Ошибка: не удалось добавить задание. \n", err)
+			}
+		}()
+
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Успешно")
+		if _, err := hb.bot.Send(msg); err != nil {
+			log.Println("Ошибка: не удалось отправить сообщение. \n", err)
+		}
 	}
 }

@@ -16,7 +16,7 @@ func (hb *HomeworkBot) getAllTask(update tgbotapi.Update) {
 		}
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Ваши задания")
 		for _, task := range tasks {
-
+			//добавить форматированный импорт если будет не похуй
 			msg.Text += task.SubjectName + " - " + task.Task + "\n"
 
 		}

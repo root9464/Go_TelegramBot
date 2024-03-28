@@ -11,7 +11,7 @@ import (
 
 func Core() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("ошибка прочтения переменных окружения. \n", err)
 	}
 	token := os.Getenv("TOKEN")
 

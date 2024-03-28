@@ -11,14 +11,15 @@ import (
 type HomeworkBot struct {
 	bot *tgbotapi.BotAPI
 	db  *gorm.DB
-}
 
-var (
-	isSubjectInput bool
-	isTaskInput    bool
-	subjectName    string
-	task           string
-)
+	state struct {
+		IsSubjectInput bool
+		IsTaskInput    bool
+		SubjectName    string
+		Task           string
+		IsAddTask      bool //костыль тк я заебался
+	}
+}
 
 func NewHomeworkBot(token string) (*HomeworkBot, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
@@ -55,6 +56,7 @@ func (hb *HomeworkBot) Start() {
 				tgbotapi.NewKeyboardButtonRow(
 					tgbotapi.NewKeyboardButton("Добавить ДЗ"),
 					tgbotapi.NewKeyboardButton("Получить все ДЗ"),
+					tgbotapi.NewKeyboardButton("Получить ДЗ"),
 				),
 			)
 
@@ -62,11 +64,12 @@ func (hb *HomeworkBot) Start() {
 			msg.ReplyMarkup = keyboard
 
 			if _, err := hb.bot.Send(msg); err != nil {
-				log.Println("Error: failed to send message. \n", err)
+				log.Println("ошибка: не удалось отправить сообщение. \n", err)
 			}
 
 			commandMessageSent = true
 		}
+
 		hb.processesBotUpdate(update)
 
 	}
@@ -75,4 +78,5 @@ func (hb *HomeworkBot) Start() {
 func (hb *HomeworkBot) processesBotUpdate(update tgbotapi.Update) {
 	hb.addTask(update)
 	hb.getAllTask(update)
+	hb.getTask(update)
 }
